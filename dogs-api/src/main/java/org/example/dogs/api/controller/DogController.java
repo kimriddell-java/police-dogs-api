@@ -6,7 +6,7 @@ import org.example.dogs.api.dto.DogResponse;
 import org.example.dogs.domain.model.Dog;
 import org.example.dogs.domain.service.DogService;
 
-@Controller("/api/dogs/dogs")
+@Controller("/api/dogs")
 public class DogController {
 
     private final DogService dogService;
