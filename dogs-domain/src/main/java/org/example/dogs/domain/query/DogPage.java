@@ -1,4 +1,6 @@
-package org.example.dogs.domain.model;
+package org.example.dogs.domain.query;
+
+import org.example.dogs.domain.model.Dog;
 
 import java.util.Collections;
 import java.util.List;

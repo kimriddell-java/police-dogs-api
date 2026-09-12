@@ -1,9 +1,9 @@
 package org.example.dogs.domain.repository;
 
 import org.example.dogs.domain.model.Dog;
-import org.example.dogs.domain.model.DogFilter;
-import org.example.dogs.domain.model.DogPage;
-import org.example.dogs.domain.model.DogPageRequest;
+import org.example.dogs.domain.query.DogFilter;
+import org.example.dogs.domain.query.DogPage;
+import org.example.dogs.domain.query.DogPageRequest;
 
 import java.util.Optional;
 

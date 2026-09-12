@@ -1,4 +1,4 @@
-package org.example.dogs.domain.model;
+package org.example.dogs.domain.query;
 
 public record DogPageRequest(
         int page,

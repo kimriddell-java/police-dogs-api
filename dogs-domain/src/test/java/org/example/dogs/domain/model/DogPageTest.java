@@ -1,5 +1,8 @@
 package org.example.dogs.domain.model;
 
+import org.example.dogs.domain.query.DogFilter;
+import org.example.dogs.domain.query.DogPage;
+import org.example.dogs.domain.query.DogPageRequest;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
