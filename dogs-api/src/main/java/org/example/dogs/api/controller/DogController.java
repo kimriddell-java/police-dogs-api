@@ -1,8 +1,9 @@
 package org.example.dogs.api.controller;
 
+import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
-import org.example.dogs.api.dto.DogResponse;
+import io.micronaut.http.annotation.Post;
 import org.example.dogs.domain.model.Dog;
 import org.example.dogs.domain.service.DogService;
 
@@ -15,15 +16,13 @@ public class DogController {
         this.dogService = dogService;
     }
 
+    @Post
+    public Dog createDog(@Body Dog dog) {
+        return dogService.createDog(dog);
+    }
+
     @Get("/{id}")
-    public DogResponse getDog(Long id) {
-
-        Dog dog = dogService.getDog(id);
-
-        return new DogResponse(
-                dog.id(),
-                dog.name(),
-                dog.breed()
-        );
+    public Dog getDog(Long id) {
+        return dogService.getDog(id);
     }
 }
