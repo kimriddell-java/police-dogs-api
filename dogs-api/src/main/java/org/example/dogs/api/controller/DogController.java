@@ -7,7 +7,10 @@ import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
+import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
+import org.example.dogs.api.mapper.DogApiMapper;
+import org.example.dogs.api.model.DogRequest;
 import org.example.dogs.domain.model.Dog;
 import org.example.dogs.domain.query.DogFilter;
 import org.example.dogs.domain.query.DogPage;
@@ -19,21 +22,35 @@ public class DogController {
 
     private final DogService dogService;
     private final ObjectMapper objectMapper;
+    private final DogApiMapper dogApiMapper;
 
-    public DogController(DogService dogService, ObjectMapper objectMapper) {
+    public DogController(
+            DogService dogService,
+            ObjectMapper objectMapper,
+            DogApiMapper dogApiMapper) {
         this.dogService = dogService;
         this.objectMapper = objectMapper;
+        this.dogApiMapper = dogApiMapper;
     }
 
     @Post
-    public HttpResponse<Dog> createDog(@Body Dog dog) {
-        Dog createdDog = dogService.createDog(dog);
+    public HttpResponse<Dog> createDog(@Body DogRequest request) {
+        Dog createdDog = dogService.createDog(
+                dogApiMapper.toDomain(request)
+        );
+
         return HttpResponse.created(createdDog);
     }
 
     @Get("/{id}")
     public Dog getDog(Long id) {
         return dogService.getDog(id);
+    }
+
+    @Put("/{id}")
+    public Dog updateDog(Long id, @Body DogRequest request) {
+        Dog dog = dogApiMapper.toDomain(request, id);
+        return dogService.updateDog(id, dog);
     }
 
     @Get("/dogs")

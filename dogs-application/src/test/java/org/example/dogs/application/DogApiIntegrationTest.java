@@ -10,9 +10,7 @@ import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.test.support.TestPropertyProvider;
 import jakarta.inject.Inject;
-import org.example.dogs.domain.model.Dog;
-import org.example.dogs.domain.model.DogStatus;
-import org.example.dogs.domain.model.Gender;
+import org.example.dogs.domain.model.*;
 import org.example.dogs.domain.query.DogPage;
 import org.example.dogs.domain.repository.DogRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +22,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.net.URI;
+import java.time.LocalDate;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -194,5 +194,117 @@ class DogApiIntegrationTest implements TestPropertyProvider {
         assertEquals(200, response.code());
         assertEquals(1, response.body().content().size());
         assertEquals("Rex", response.body().content().get(0).name());
+    }
+
+    @Test
+    void shouldFilterDogsByBreed() {
+        dogRepository.create(new Dog(null, "Rex", "German Shepherd"));
+        dogRepository.create(new Dog(null, "Gia", "Lagotto Romagnolo"));
+
+        URI uri = UriBuilder.of("/api/dogs/dogs")
+                .queryParam("filter", "{\"breed\":\"Lagotto Romagnolo\"}")
+                .build();
+
+        HttpRequest<?> request = HttpRequest.GET(uri);
+
+        HttpResponse<DogPage> response =
+                client.toBlocking().exchange(request, DogPage.class);
+
+        assertEquals(200, response.code());
+        assertEquals(1, response.body().content().size());
+        assertEquals("Gia", response.body().content().get(0).name());
+    }
+
+    @Test
+    void shouldFilterDogsBySupplier() {
+        Dog layla = new Dog(
+                null,
+                "Layla",
+                "German Shepherd",
+                null,       // badgeId
+                null,       // gender
+                null,       // birthDate
+                null,       // dateAcquired
+                null,       // currentStatus
+                null,       // leavingDate
+                null,       // leavingReason
+                new Supplier(null, "Kevena"),
+                Set.of()    // kennellingCharacteristics
+        );
+        Dog gia = new Dog(
+                null,
+                "Gia",
+                "Lagotto Romagnolo",
+                null,       // badgeId
+                null,       // gender
+                null,       // birthDate
+                null,       // dateAcquired
+                null,       // currentStatus
+                null,       // leavingDate
+                null,       // leavingReason
+                new Supplier(null, "Tartu"),
+                Set.of()    // kennellingCharacteristics
+        );
+        dogRepository.create(layla);
+        dogRepository.create(gia);
+
+        URI uri = UriBuilder.of("/api/dogs/dogs")
+                .queryParam("filter", "{\"supplier\":\"Kevena\"}")
+                .build();
+
+        HttpRequest<?> request = HttpRequest.GET(uri);
+
+        HttpResponse<DogPage> response =
+                client.toBlocking().exchange(request, DogPage.class);
+
+        assertEquals(200, response.code());
+        assertEquals(1, response.body().content().size());
+        assertEquals("Kevena", response.body().content().get(0).supplier().name());
+    }
+
+    @Test
+    void shouldRetireDog() {
+        Dog layla = dogRepository.create(new Dog(
+                null,
+                "Layla",
+                "German Shepherd",
+                null,
+                null,
+                null,
+                null,
+                DogStatus.IN_SERVICE,
+                null,
+                null,
+                new Supplier(null, "Kevena"),
+                Set.of()
+        ));
+
+        String json = """
+            {
+              "name": "Layla",
+              "breed": "German Shepherd",
+              "currentStatus": "RETIRED",
+              "leavingDate": "2026-09-13",
+              "leavingReason": "RETIRED_REHOUSED",
+              "supplier": {
+                "name": "Kevena"
+              },
+              "kennellingCharacteristics": []
+            }
+            """;
+
+        HttpRequest<String> request =
+                HttpRequest.PUT("/api/dogs/" + layla.id(), json)
+                        .contentType(MediaType.APPLICATION_JSON_TYPE);
+
+        HttpResponse<Dog> response =
+                client.toBlocking().exchange(request, Dog.class);
+
+        assertEquals(200, response.code());
+        assertEquals(layla.id(), response.body().id());
+        assertEquals("Layla", response.body().name());
+        assertEquals(DogStatus.RETIRED, response.body().currentStatus());
+        assertEquals(LocalDate.of(2026, 9, 13), response.body().leavingDate());
+        assertEquals(LeavingReason.RETIRED_REHOUSED, response.body().leavingReason());
     }
 }
