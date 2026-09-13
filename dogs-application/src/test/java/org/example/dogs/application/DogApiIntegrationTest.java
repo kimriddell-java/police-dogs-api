@@ -6,6 +6,7 @@ import io.micronaut.http.HttpResponse;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.client.HttpClient;
 import io.micronaut.http.client.annotation.Client;
+import io.micronaut.http.client.exceptions.HttpClientResponseException;
 import io.micronaut.http.uri.UriBuilder;
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest;
 import io.micronaut.test.support.TestPropertyProvider;
@@ -26,7 +27,7 @@ import java.time.LocalDate;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @MicronautTest(transactional = false)
 @Testcontainers(disabledWithoutDocker = true)
@@ -306,5 +307,92 @@ class DogApiIntegrationTest implements TestPropertyProvider {
         assertEquals(DogStatus.RETIRED, response.body().currentStatus());
         assertEquals(LocalDate.of(2026, 9, 13), response.body().leavingDate());
         assertEquals(LeavingReason.RETIRED_REHOUSED, response.body().leavingReason());
+    }
+
+    @Test
+    void shouldDeleteDog() {
+        Dog layla = dogRepository.create(new Dog(
+                null,
+                "Layla",
+                "German Shepherd"
+        ));
+
+        HttpRequest<?> request =
+                HttpRequest.DELETE("/api/dogs/" + layla.id());
+
+        HttpResponse<?> response =
+                client.toBlocking().exchange(request);
+
+        assertEquals(204, response.code());
+    }
+
+    @Test
+    void shouldReturn404WhenDogNotFound() {
+        HttpRequest<?> request =
+                HttpRequest.GET("/api/dogs/999999");
+
+        HttpClientResponseException exception =
+                assertThrows(
+                        HttpClientResponseException.class,
+                        () -> client.toBlocking().exchange(request)
+                );
+
+        assertEquals(404, exception.getStatus().getCode());
+    }
+
+    @Test
+    void shouldReturn400WhenNameIsMissing() {
+        String json = """
+        {
+          "breed": "German Shepherd",
+          "gender": "FEMALE",
+          "currentStatus": "IN_SERVICE"
+        }
+        """;
+
+        HttpRequest<String> request =
+                HttpRequest.POST("/api/dogs", json)
+                        .contentType(MediaType.APPLICATION_JSON_TYPE);
+
+        HttpClientResponseException exception =
+                assertThrows(
+                        HttpClientResponseException.class,
+                        () -> client.toBlocking().exchange(request)
+                );
+
+        assertEquals(400, exception.getStatus().getCode());
+    }
+
+    @Test
+    void shouldGetDogStatuses() {
+        DogStatus[] statuses =
+                client.toBlocking().retrieve(
+                        HttpRequest.GET("/api/dogs/statuses"),
+                        DogStatus[].class
+                );
+
+        assertArrayEquals(DogStatus.values(), statuses);
+    }
+
+    @Test
+    void shouldGetLeavingReasons() {
+        LeavingReason[] leavingReasons =
+                client.toBlocking().retrieve(
+                        HttpRequest.GET("/api/dogs/leaving-reasons"),
+                        LeavingReason[].class
+                );
+
+        assertArrayEquals(LeavingReason.values(), leavingReasons);
+    }
+
+    @Test
+    void shouldGetGenders() {
+        Gender[] genders =
+                client.toBlocking().retrieve(
+                        HttpRequest.GET("/api/dogs/genders"),
+                        Gender[].class
+                );
+
+        assertArrayEquals(Gender.values(), genders);
     }
 }

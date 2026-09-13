@@ -1,5 +1,7 @@
 package org.example.dogs.application.service;
 
+import io.micronaut.http.HttpStatus;
+import io.micronaut.http.exceptions.HttpStatusException;
 import jakarta.inject.Singleton;
 import org.example.dogs.domain.model.Dog;
 import org.example.dogs.domain.query.DogFilter;
@@ -25,7 +27,12 @@ public class DogServiceImpl implements DogService {
     @Override
     public Dog getDog(Long id) {
         return dogRepository.findById(id)
-                .orElseThrow();
+                .orElseThrow(() ->
+                        new HttpStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Dog not found"
+                        )
+                );
     }
 
     @Override

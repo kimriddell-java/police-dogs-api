@@ -5,13 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micronaut.http.HttpResponse;
 import io.micronaut.http.annotation.Body;
 import io.micronaut.http.annotation.Controller;
+import io.micronaut.http.annotation.Delete;
 import io.micronaut.http.annotation.Get;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.annotation.Put;
 import io.micronaut.http.annotation.QueryValue;
+import jakarta.validation.Valid;
 import org.example.dogs.api.mapper.DogApiMapper;
 import org.example.dogs.api.model.DogRequest;
 import org.example.dogs.domain.model.Dog;
+import org.example.dogs.domain.model.DogStatus;
+import org.example.dogs.domain.model.Gender;
+import org.example.dogs.domain.model.LeavingReason;
 import org.example.dogs.domain.query.DogFilter;
 import org.example.dogs.domain.query.DogPage;
 import org.example.dogs.domain.query.DogPageRequest;
@@ -34,7 +39,7 @@ public class DogController {
     }
 
     @Post
-    public HttpResponse<Dog> createDog(@Body DogRequest request) {
+    public HttpResponse<Dog> createDog(@Body @Valid DogRequest request) {
         Dog createdDog = dogService.createDog(
                 dogApiMapper.toDomain(request)
         );
@@ -48,9 +53,15 @@ public class DogController {
     }
 
     @Put("/{id}")
-    public Dog updateDog(Long id, @Body DogRequest request) {
+    public Dog updateDog(Long id, @Body @Valid DogRequest request) {
         Dog dog = dogApiMapper.toDomain(request, id);
         return dogService.updateDog(id, dog);
+    }
+
+    @Delete("/{id}")
+    public HttpResponse<?> deleteDog(Long id) {
+        dogService.deleteDog(id);
+        return HttpResponse.noContent();
     }
 
     @Get("/dogs")
@@ -68,5 +79,20 @@ public class DogController {
                 dogFilter,
                 new DogPageRequest(page, size)
         );
+    }
+
+    @Get("/statuses")
+    public DogStatus[] getStatuses() {
+        return DogStatus.values();
+    }
+
+    @Get("/leaving-reasons")
+    public LeavingReason[] getLeavingReasons() {
+        return LeavingReason.values();
+    }
+
+    @Get("/genders")
+    public Gender[] getGenders() {
+        return Gender.values();
     }
 }
