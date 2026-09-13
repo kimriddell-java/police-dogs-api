@@ -18,10 +18,10 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>dogs-domain</module>
-        <module>dogs-persistence</module>
-        <module>dogs-api</module>
-        <module>dogs-application</module>
+        <module>model</module>
+        <module>adapter</module>
+        <module>application</module>
+        <module>bootstrap</module>
     </modules>
 
     <properties>

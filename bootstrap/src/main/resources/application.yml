@@ -1,0 +1,17 @@
+micronaut:
+  application:
+    name: police-dogs-api
+
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/police_dogs
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+    schema-generate: NONE
+    dialect: POSTGRES
+
+flyway:
+  datasources:
+    default:
+      enabled: true
